@@ -1,0 +1,25 @@
+{
+  "name": "solsafilms-backend",
+  "version": "1.0.0",
+  "description": "API REST de administración SolsaFilms (Node.js + Supabase + bcrypt)",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "keywords": ["nodejs", "supabase", "rest", "bcrypt"],
+  "author": "SolsaCode",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}

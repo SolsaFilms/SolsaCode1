@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Cormorant Garamond", ui-serif, Georgia, serif;
+  --color-ink: #0c1218;
+  --color-navy: #141c26;
+  --color-slate-panel: #1b2532;
+  --color-gold: #b3946a;
+  --color-gold-soft: #cbb089;
+  --color-paper: #f3efe8;
+  --color-mist: #e6e0d6;
+  --color-line: #d8d1c5;
+  --color-muted: #6b645b;
+  --color-ink-text: #1c2128;
+  --color-danger: #8f2d2d;
+  --color-danger-bg: #f8eceb;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--color-paper);
+  color: var(--color-ink-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.panel-texture {
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 28%),
+    repeating-linear-gradient(
+      -18deg,
+      transparent,
+      transparent 11px,
+      rgba(255, 255, 255, 0.015) 11px,
+      rgba(255, 255, 255, 0.015) 12px
+    );
+}
+
+.sprocket {
+  background-image: radial-gradient(circle, rgba(243, 239, 232, 0.18) 1.4px, transparent 1.6px);
+  background-size: 14px 22px;
+  background-repeat: repeat-y;
+}
