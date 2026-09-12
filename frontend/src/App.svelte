@@ -1,258 +1,139 @@
 <script>
-  import {
-    correoRecordado,
-    cerrarSesion,
-    guardarSesion,
-    iniciarSesion,
-  } from './lib/auth.js'
+  import ParticleField from './lib/ParticleField.svelte'
+  import LoginPanel from './lib/LoginPanel.svelte'
+  import { cerrarSesion, sesionActual } from './lib/auth.js'
 
-  const emailGuardado = correoRecordado()
+  let sesion = $state(sesionActual())
+  let loginAbierto = $state(false)
+  let menu = $state(false)
+  let rx = $state(0)
+  let ry = $state(0)
+  let mx = $state(50)
+  let my = $state(50)
 
-  let email = $state(emailGuardado)
-  let password = $state('')
-  let recordar = $state(Boolean(emailGuardado))
-  let mostrarPassword = $state(false)
-  let cargando = $state(false)
-  let error = $state('')
-  let aviso = $state('')
-  let sesion = $state(null)
+  const anio = new Date().getFullYear()
+  const paneles = [
+    ['Catálogo', 'Películas y existencias', -40],
+    ['Clientes', 'Directorio operativo', 0],
+    ['Rentas', 'Ciclo de préstamo', 40],
+  ]
 
-  const formularioInvalido = $derived(!email.trim() || password.length < 1)
-
-  async function enviar(evento) {
-    evento.preventDefault()
-    error = ''
-    aviso = ''
-
-    if (formularioInvalido) {
-      error = 'Ingrese su correo electrónico y contraseña.'
-      return
-    }
-
-    cargando = true
-
-    try {
-      const resultado = await iniciarSesion({ email, password })
-      guardarSesion({
-        token: resultado.token,
-        usuario: resultado.usuario,
-        recordar,
-      })
-      sesion = resultado.usuario
-      password = ''
-    } catch (err) {
-      error = err instanceof Error ? err.message : 'Ocurrió un error inesperado.'
-    } finally {
-      cargando = false
-    }
+  function mirar(e) {
+    if (loginAbierto) return
+    const w = window.innerWidth
+    const h = window.innerHeight
+    ry = (e.clientX / w - 0.5) * 14
+    rx = -(e.clientY / h - 0.5) * 9
+    mx = (e.clientX / w) * 100
+    my = (e.clientY / h) * 100
   }
 
-  function salir() {
-    cerrarSesion()
-    sesion = null
-  }
-
-  function olvidaste(evento) {
-    evento.preventDefault()
-    error = ''
-    aviso = 'La recuperación de acceso la gestiona el administrador del sistema.'
+  function abrirLogin() {
+    loginAbierto = true
+    rx = 0
+    ry = 0
   }
 </script>
 
-<div class="min-h-svh lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-  <aside
-    class="relative flex min-h-[34svh] flex-col justify-between overflow-hidden bg-navy px-8 py-10 text-paper panel-texture sm:px-12 lg:min-h-svh lg:px-16 lg:py-14"
-  >
-    <div class="pointer-events-none absolute inset-y-0 left-0 w-3 sprocket" aria-hidden="true"></div>
-    <div class="pointer-events-none absolute inset-y-10 right-10 hidden w-px bg-white/10 lg:block" aria-hidden="true"></div>
+<svelte:window onpointermove={mirar} />
 
-    <header class="relative">
-      <p class="text-[11px] font-medium tracking-[0.32em] text-gold-soft uppercase">SolsaFilms</p>
-      <p class="mt-3 text-sm tracking-[0.08em] text-paper/55">Consola institucional</p>
+<div
+  class="stage visor"
+  style="--rx:{rx}deg; --ry:{ry}deg; --mx:{mx}%; --my:{my}%"
+>
+  <ParticleField looking={!loginAbierto} />
+  <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_8%,#050505_82%)]"></div>
+  <div class="gaze" aria-hidden="true"></div>
+
+  <div class="world">
+    <header class="relative z-20 flex items-center justify-between gap-4 px-5 py-5 md:px-10 hud-in">
+      <a href="#inicio" class="flex items-center gap-2 text-[15px] font-medium tracking-[0.12em]">
+        <span class="logo-orb">S</span>
+        SOLSAFILMS
+      </a>
+
+      <nav class="hidden items-center gap-8 text-[12px] tracking-[0.18em] text-white/70 uppercase md:flex">
+        <a href="#catalogo" class="nav-link">Catálogo</a>
+        <a href="#rentas" class="nav-link">Rentas</a>
+        <a href="#recursos" class="nav-link">Recursos</a>
+      </nav>
+
+      <div class="flex items-center gap-2">
+        {#if sesion}
+          <span class="hidden text-sm text-white/60 sm:inline">{sesion.nombre}</span>
+          <button type="button" class="btn-ghost" onclick={() => { cerrarSesion(); sesion = null }}>Salir</button>
+        {:else}
+          <button type="button" class="btn-ghost hidden sm:inline-flex" onclick={abrirLogin}>Acceso</button>
+          <button type="button" class="btn-solid pulse-btn" onclick={abrirLogin}>Comience</button>
+        {/if}
+        <button type="button" class="btn-ghost md:hidden" onclick={() => (menu = !menu)} aria-label="Menú">☰</button>
+      </div>
     </header>
 
-    <div class="relative max-w-md py-10 lg:py-0">
-      <p class="font-serif text-[2.35rem] leading-[1.12] text-paper sm:text-5xl lg:text-[3.35rem]">
-        Custodia del acervo.<br />
-        <span class="italic text-gold-soft">Precisión operativa.</span>
-      </p>
-      <p class="mt-6 max-w-sm text-[15px] leading-relaxed text-paper/65">
-        Plataforma de administración para el control de inventario cinematográfico, clientes y rentas.
-      </p>
-
-      <dl class="mt-10 grid grid-cols-3 gap-6 border-t border-white/10 pt-8 text-paper/80">
-        <div>
-          <dt class="text-[10px] tracking-[0.22em] text-paper/40 uppercase">Ámbito</dt>
-          <dd class="mt-2 text-sm">Institucional</dd>
-        </div>
-        <div>
-          <dt class="text-[10px] tracking-[0.22em] text-paper/40 uppercase">Acceso</dt>
-          <dd class="mt-2 text-sm">Nominativo</dd>
-        </div>
-        <div>
-          <dt class="text-[10px] tracking-[0.22em] text-paper/40 uppercase">Canal</dt>
-          <dd class="mt-2 text-sm">Cifrado</dd>
-        </div>
-      </dl>
-    </div>
-
-    <footer class="relative text-[12px] tracking-wide text-paper/35">
-      © {new Date().getFullYear()} SolsaFilms · Uso exclusivo autorizado
-    </footer>
-  </aside>
-
-  <main class="flex items-center bg-paper px-6 py-12 sm:px-12 lg:px-16 xl:px-24">
-    <div class="mx-auto w-full max-w-[420px]">
-      <div class="mb-10 flex items-center gap-3">
-        <span class="flex h-10 w-10 items-center justify-center border border-gold/70 text-[11px] tracking-[0.16em] text-navy" aria-hidden="true">
-          SF
-        </span>
-        <div>
-          <p class="text-[13px] font-medium tracking-[0.18em] text-navy uppercase">SolsaFilms</p>
-          <p class="text-xs text-muted">Administración</p>
-        </div>
+    {#if menu}
+      <div class="relative z-20 mx-5 mb-2 flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/70 p-4 text-sm uppercase tracking-[0.16em] md:hidden">
+        <a href="#catalogo" onclick={() => (menu = false)}>Catálogo</a>
+        <a href="#rentas" onclick={() => (menu = false)}>Rentas</a>
+        <a href="#recursos" onclick={() => (menu = false)}>Recursos</a>
       </div>
+    {/if}
 
+    <main id="inicio" class="relative z-10 mx-auto flex min-h-[calc(100svh-88px)] max-w-6xl flex-col items-center justify-center px-5 pb-16 text-center">
       {#if sesion}
-        <section aria-live="polite">
-          <p class="text-[11px] tracking-[0.28em] text-gold uppercase">Sesión activa</p>
-          <h1 class="mt-3 font-serif text-4xl text-ink-text">Bienvenido</h1>
-          <p class="mt-3 text-sm leading-relaxed text-muted">
-            Identidad verificada. Las credenciales coinciden con un usuario autorizado del sistema.
-          </p>
-          <div class="mt-8 border border-line bg-white/60 px-5 py-4">
-            <p class="text-sm font-medium text-ink-text">{sesion.nombre}</p>
-            <p class="mt-1 text-sm text-muted">{sesion.email}</p>
-            <p class="mt-3 text-[11px] tracking-[0.2em] text-gold uppercase">{sesion.rol}</p>
-          </div>
-          <button
-            type="button"
-            class="mt-8 w-full border border-navy/20 px-4 py-3 text-sm tracking-wide text-navy transition-colors duration-200 hover:border-navy hover:bg-navy hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
-            onclick={salir}
-          >
-            Cerrar sesión
-          </button>
-        </section>
+        <p class="float-copy text-[11px] tracking-[0.32em] text-white/45 uppercase">Sesión activa · {sesion.rol}</p>
+        <h1 class="hero-copy mt-4 max-w-3xl font-serif text-4xl leading-tight sm:text-6xl">Consola de administración</h1>
+        <p class="float-copy mt-4 max-w-lg text-white/60">{sesion.email}</p>
+        <div id="catalogo" class="mt-12 grid w-full max-w-3xl gap-4 sm:grid-cols-3" style="transform-style: preserve-3d">
+          {#each paneles as [t, d, z], i}
+            <article class="glass depth-card p-5 text-left" style="--delay:{i * 0.12}s; --z:{z}px">
+              <h2 class="font-medium">{t}</h2>
+              <p class="mt-1 text-sm text-white/50">{d}</p>
+            </article>
+          {/each}
+        </div>
       {:else}
-        <p class="text-[11px] tracking-[0.28em] text-gold uppercase">Acceso seguro</p>
-        <h1 class="mt-3 font-serif text-4xl text-ink-text sm:text-[2.6rem]">Bienvenido</h1>
-        <p class="mt-3 text-sm leading-relaxed text-muted">
-          Ingrese con las credenciales institucionales que le fueron asignadas para continuar.
-        </p>
-
-        <form class="mt-10 space-y-5" onsubmit={enviar} novalidate>
-          {#if error}
-            <div
-              class="border border-danger/25 bg-danger-bg px-4 py-3 text-sm text-danger"
-              role="alert"
-            >
-              {error}
-            </div>
-          {/if}
-
-          {#if aviso}
-            <div
-              class="border border-navy/10 bg-white px-4 py-3 text-sm text-navy/80"
-              role="status"
-            >
-              {aviso}
-            </div>
-          {/if}
-
-          <div>
-            <label for="email" class="mb-2 block text-[12px] font-medium tracking-[0.08em] text-navy uppercase">
-              Correo electrónico
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autocomplete="email"
-              inputmode="email"
-              required
-              aria-invalid={error ? 'true' : 'false'}
-              bind:value={email}
-              disabled={cargando}
-              class="w-full border border-line bg-white px-3.5 py-3 text-[15px] text-ink-text outline-none transition-colors duration-200 placeholder:text-muted/50 hover:border-navy/30 focus:border-navy disabled:cursor-not-allowed disabled:bg-mist/40 disabled:text-muted"
-              placeholder="nombre@institucion.mx"
-            />
+        <aside class="card-float bob" style="--x:6%; --y:22%; --r:-10deg; --z:80px; --delay:0s">
+          <p class="text-[10px] tracking-[0.2em] text-white/40 uppercase">Acervo</p>
+          <p class="mt-2 font-serif text-2xl">Heading</p>
+          <p class="mt-1 text-xs text-white/45">Tipografía de consola</p>
+        </aside>
+        <aside class="card-float bob" style="--x:78%; --y:16%; --r:9deg; --z:110px; --delay:0.4s">
+          <div class="mb-3 h-16 rounded-lg bg-gradient-to-br from-amber-200/80 to-stone-700 shimmer"></div>
+          <p class="text-sm">Faun</p>
+        </aside>
+        <aside class="card-float bob" style="--x:8%; --y:68%; --r:7deg; --z:60px; --delay:0.8s">
+          <p class="text-[10px] text-white/40 uppercase">Fonts</p>
+          <p class="mt-2 font-serif text-xl italic">Ethereal</p>
+        </aside>
+        <aside class="card-float bob" style="--x:76%; --y:70%; --r:-6deg; --z:90px; --delay:1.1s">
+          <p class="text-[10px] text-white/40 uppercase">Palette</p>
+          <div class="mt-3 flex gap-2">
+            <span class="h-7 w-7 rounded-full bg-white"></span>
+            <span class="h-7 w-7 rounded-full bg-zinc-500"></span>
+            <span class="h-7 w-7 rounded-full bg-zinc-800 ring-1 ring-white/20"></span>
           </div>
+        </aside>
 
-          <div>
-            <label for="password" class="mb-2 block text-[12px] font-medium tracking-[0.08em] text-navy uppercase">
-              Contraseña
-            </label>
-            <div class="relative">
-              <input
-                id="password"
-                name="password"
-                type={mostrarPassword ? 'text' : 'password'}
-                autocomplete="current-password"
-                required
-                bind:value={password}
-                disabled={cargando}
-                class="w-full border border-line bg-white py-3 pr-12 pl-3.5 text-[15px] text-ink-text outline-none transition-colors duration-200 placeholder:text-muted/50 hover:border-navy/30 focus:border-navy disabled:cursor-not-allowed disabled:bg-mist/40 disabled:text-muted"
-                placeholder="••••••••"
-              />
-              <button
-                type="button"
-                class="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-muted transition-colors duration-200 hover:text-navy focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-gold disabled:opacity-40"
-                aria-label={mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                aria-pressed={mostrarPassword}
-                disabled={cargando}
-                onclick={() => (mostrarPassword = !mostrarPassword)}
-              >
-                {#if mostrarPassword}
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="h-[18px] w-[18px]" aria-hidden="true">
-                    <path d="M3 3l18 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-                    <path d="M10.6 10.7a2.2 2.2 0 003.1 3.1M9.9 5.5A10 10 0 0121 12a10.4 10.4 0 01-2.1 3.1M6.2 6.4A10.3 10.3 0 003 12a10.2 10.2 0 0012.4 6.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-                  </svg>
-                {:else}
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="h-[18px] w-[18px]" aria-hidden="true">
-                    <path d="M2.8 12S6.4 6.5 12 6.5 21.2 12 21.2 12 17.6 17.5 12 17.5 2.8 12 2.8 12z" stroke="currentColor" stroke-width="1.5" />
-                    <circle cx="12" cy="12" r="2.4" stroke="currentColor" stroke-width="1.5" />
-                  </svg>
-                {/if}
-              </button>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-between gap-4 pt-1">
-            <label class="flex cursor-pointer items-center gap-2.5 text-sm text-navy/80">
-              <input
-                type="checkbox"
-                class="h-4 w-4 appearance-none border border-line bg-white transition-colors duration-200 checked:border-navy checked:bg-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold disabled:cursor-not-allowed"
-                bind:checked={recordar}
-                disabled={cargando}
-              />
-              Recordarme
-            </label>
-            <a
-              href="#recuperar"
-              class="text-sm text-muted underline decoration-line underline-offset-4 transition-colors duration-200 hover:text-navy hover:decoration-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
-              onclick={olvidaste}
-            >
-              ¿Olvidaste tu contraseña?
-            </a>
-          </div>
-
-          <button
-            type="submit"
-            class="mt-2 flex w-full items-center justify-center gap-2 bg-navy px-4 py-3.5 text-sm tracking-[0.16em] text-paper uppercase transition-colors duration-200 hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold disabled:cursor-not-allowed disabled:bg-navy/45"
-            disabled={cargando || formularioInvalido}
-          >
-            {#if cargando}
-              <span
-                class="h-4 w-4 animate-spin rounded-full border border-paper/25 border-t-paper"
-                aria-hidden="true"
-              ></span>
-              Verificando
-            {:else}
-              Iniciar sesión
-            {/if}
-          </button>
-        </form>
+        <h1 class="hero-copy max-w-3xl font-serif text-[1.85rem] leading-[1.25] text-balance sm:text-5xl">
+          Combinamos la precisión de un acervo cinematográfico con una consola diseñada para que cada operación deje huella.
+        </h1>
+        <button type="button" class="cta-orbit mt-8 inline-flex items-center gap-2 text-sm tracking-[0.22em] uppercase" onclick={abrirLogin}>
+          Comience <span class="arrow" aria-hidden="true">→</span>
+        </button>
       {/if}
+    </main>
+
+    <footer id="recursos" class="relative z-10 px-5 py-6 text-center text-xs text-white/30">
+      © {anio} SolsaFilms · entorno inmersivo
+    </footer>
+  </div>
+
+  {#if loginAbierto && !sesion}
+    <div class="portal" role="dialog" aria-modal="true">
+      <LoginPanel
+        onExito={(u) => { sesion = u; loginAbierto = false }}
+        onCerrar={() => (loginAbierto = false)}
+      />
     </div>
-  </main>
+  {/if}
 </div>

@@ -39,6 +39,16 @@ export function correoRecordado() {
   return localStorage.getItem(EMAIL_KEY) ?? ''
 }
 
+export function sesionActual() {
+  const raw = localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_KEY)
+  if (!raw) return null
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
 export function cerrarSesion() {
   localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(USER_KEY)
