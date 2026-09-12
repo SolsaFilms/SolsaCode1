@@ -49,7 +49,7 @@
     <header class="relative z-20 flex items-center justify-between gap-4 px-5 py-5 md:px-10 hud-in">
       <a href="#inicio" class="flex items-center gap-2 text-[15px] font-medium tracking-[0.12em]">
         <span class="logo-orb">S</span>
-        SOLSAFILMS
+        SolsaFilmsSergioAdrianSolisa324232
       </a>
 
       <nav class="hidden items-center gap-8 text-[12px] tracking-[0.18em] text-white/70 uppercase md:flex">
@@ -124,7 +124,7 @@
     </main>
 
     <footer id="recursos" class="relative z-10 px-5 py-6 text-center text-xs text-white/30">
-      © {anio} SolsaFilms · entorno inmersivo
+      © {anio} SolsaFilmsSergioAdrianSolisa324232 · entorno inmersivo
     </footer>
   </div>
 
